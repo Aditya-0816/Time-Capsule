@@ -1,0 +1,17 @@
+{
+  "name": "timecapsule",
+  "version": "1.0.0",
+  "description": "PBL Project #40 — TimeCapsule smart contract on Sepolia",
+  "scripts": {
+    "compile":  "npx hardhat compile",
+    "test":     "npx hardhat test",
+    "deploy":   "npx hardhat run scripts/deploy.js --network sepolia",
+    "verify":   "npx hardhat verify --network sepolia",
+    "node":     "npx hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.0.0",
+    "hardhat": "^2.22.0"
+  }
+}
