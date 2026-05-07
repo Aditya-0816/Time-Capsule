@@ -3,411 +3,354 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TimeCapsule — Demo</title>
+<title>TimeCapsule</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+:root {
+  --bg:     #07070f;
+  --s1:     #0e0e1a;
+  --border: rgba(255,255,255,.07);
+  --accent: #7c6af7;
+  --a2:     #f7a26a;
+  --green:  #3ef5a0;
+  --red:    #f74a6a;
+  --text:   #ececf4;
+  --muted:  #5a5a78;
+  --fh:     'Syne', sans-serif;
+  --fm:     'DM Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.35;}
+.orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.orb1{width:500px;height:500px;background:rgba(124,106,247,.12);top:-100px;right:-100px;}
+.orb2{width:400px;height:400px;background:rgba(247,162,106,.08);bottom:-80px;left:-80px;}
+.orb3{width:300px;height:300px;background:rgba(62,245,160,.06);top:40%;left:30%;}
 
-  :root {
-    --bg:      #0a0a0f;
-    --surface: #111118;
-    --border:  #2a2a3a;
-    --accent:  #7c6af7;
-    --accent2: #f7a26a;
-    --green:   #4af7a0;
-    --red:     #f74a6a;
-    --text:    #e8e8f0;
-    --muted:   #6b6b88;
-    --font-h:  'Syne', sans-serif;
-    --font-m:  'Space Mono', monospace;
-  }
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:rgba(7,7,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--fh);font-size:1.15rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;}
+.nav-links{display:flex;gap:4px;list-style:none;}
+.nav-links a{display:block;padding:6px 14px;font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-decoration:none;border-radius:6px;transition:all .2s;cursor:pointer;}
+.nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(255,255,255,.06);}
+.nav-links a.active{color:var(--accent);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+#wallet-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .3s;}
+#wallet-dot.connected{background:var(--green);box-shadow:0 0 8px var(--green);}
+#wallet-short{font-size:.7rem;color:var(--muted);}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+/* PAGES */
+.page{display:none;min-height:100vh;padding-top:64px;position:relative;z-index:1;}
+.page.active{display:block;}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-m);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* HOME */
+#page-home{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px;min-height:100vh;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.2);padding:5px 14px;border-radius:100px;margin-bottom:28px;animation:fadeUp .6s ease both;}
+.hero-title{font-family:var(--fh);font-size:clamp(3rem,8vw,6.5rem);font-weight:800;line-height:.95;letter-spacing:-3px;margin-bottom:24px;animation:fadeUp .6s .1s ease both;}
+.hero-title .grad{background:linear-gradient(135deg,var(--accent) 0%,var(--a2) 60%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:.9rem;color:var(--muted);max-width:480px;line-height:1.8;margin-bottom:44px;animation:fadeUp .6s .2s ease both;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .3s ease both;}
+.how-strip{display:flex;gap:0;margin-top:90px;width:100%;max-width:780px;animation:fadeUp .6s .4s ease both;}
+.how-item{flex:1;padding:28px 24px;border-top:1px solid var(--border);position:relative;}
+.how-item::before{content:attr(data-n);position:absolute;top:20px;right:20px;font-family:var(--fh);font-size:2rem;font-weight:800;color:rgba(255,255,255,.04);}
+.how-item+.how-item{border-left:1px solid var(--border);}
+.how-icon{font-size:1.4rem;margin-bottom:10px;}
+.how-label{font-family:var(--fh);font-size:.85rem;font-weight:700;margin-bottom:6px;}
+.how-desc{font-size:.7rem;color:var(--muted);line-height:1.6;}
+.stats-row{display:flex;gap:40px;margin-top:60px;animation:fadeUp .6s .5s ease both;}
+.stat{text-align:center;}
+.stat-val{font-family:var(--fh);font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-label{font-size:.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
 
-  /* Animated star background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(1px 1px at 10% 20%, rgba(124,106,247,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 80% 10%, rgba(247,162,106,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 50% 80%, rgba(74,247,160,.3) 0%, transparent 100%),
-      radial-gradient(600px 600px at 70% 30%, rgba(124,106,247,.06) 0%, transparent 70%),
-      radial-gradient(400px 400px at 20% 70%, rgba(247,162,106,.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* INNER PAGES */
+.inner{max-width:620px;margin:0 auto;padding:60px 24px 80px;}
+.page-header{margin-bottom:36px;}
+.page-tag{display:inline-block;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:12px;font-weight:500;}
+.tag-lock{background:rgba(124,106,247,.12);color:var(--accent);}
+.tag-reveal{background:rgba(62,245,160,.12);color:var(--green);}
+.tag-xfer{background:rgba(247,162,106,.12);color:var(--a2);}
+.tag-explore{background:rgba(255,255,255,.06);color:var(--muted);}
+.page-title{font-family:var(--fh);font-size:2.2rem;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:8px;}
+.page-desc{font-size:.78rem;color:var(--muted);line-height:1.7;}
 
-  .container {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 40px 24px 80px;
-    position: relative;
-    z-index: 1;
-  }
+/* CARD */
+.fcard{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:16px;transition:border-color .2s;animation:fadeUp .4s ease both;}
+.fcard:hover{border-color:rgba(124,106,247,.2);}
 
-  /* ── Header ── */
-  header {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .logo {
-    font-family: var(--font-h);
-    font-size: 2.6rem;
-    font-weight: 800;
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-  .tagline {
-    color: var(--muted);
-    font-size: 0.78rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+/* FORM */
+.field{margin-bottom:20px;}
+.field:last-child{margin-bottom:0;}
+label{display:block;font-size:.64rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+input,textarea,select{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.82rem;padding:12px 16px;outline:none;transition:border-color .15s,background .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);background:rgba(124,106,247,.04);}
+textarea{resize:vertical;min-height:80px;line-height:1.6;}
+input[type="number"]{-moz-appearance:textfield;}
+input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.hint{margin-top:7px;font-size:.66rem;color:var(--muted);line-height:1.5;}
+.hash-box{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:.7rem;color:var(--a2);word-break:break-all;line-height:1.6;margin-top:8px;display:none;}
+.hash-box.show{display:block;}
 
-  /* ── Wallet bar ── */
-  #wallet-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 20px;
-    margin-bottom: 32px;
-    gap: 12px;
-  }
-  #wallet-status {
-    font-size: 0.75rem;
-    color: var(--muted);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  #wallet-status span { color: var(--green); }
+/* BUTTONS */
+button{font-family:var(--fm);font-size:.75rem;font-weight:500;letter-spacing:.8px;text-transform:uppercase;border:none;border-radius:10px;padding:12px 24px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:var(--accent);color:#fff;width:100%;justify-content:center;margin-top:4px;}
+.btn-primary:hover:not(:disabled){background:#9685ff;transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,106,247,.3);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:rgba(255,255,255,.1);}
+.btn-green{background:var(--green);color:#07070f;width:100%;justify-content:center;margin-top:4px;font-weight:700;}
+.btn-green:hover:not(:disabled){background:#6fffc0;transform:translateY(-1px);}
+.btn-green:disabled{opacity:.4;cursor:not-allowed;}
+.btn-orange{background:var(--a2);color:#07070f;width:100%;justify-content:center;margin-top:4px;font-weight:700;}
+.btn-orange:hover:not(:disabled){background:#ffbd90;transform:translateY(-1px);}
+.btn-connect-large{background:linear-gradient(135deg,var(--accent),#9b8dff);color:#fff;padding:14px 32px;border-radius:12px;font-size:.8rem;}
+.btn-connect-large:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(124,106,247,.35);}
+.btn-outline-accent{background:transparent;color:var(--accent);border:1px solid rgba(124,106,247,.4);padding:14px 32px;border-radius:12px;font-size:.8rem;}
+.btn-outline-accent:hover{background:rgba(124,106,247,.08);}
 
-  /* ── Buttons ── */
-  button {
-    font-family: var(--font-m);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-  .btn-primary:hover { background: #9685ff; transform: translateY(-1px); }
-  .btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+/* LOG */
+.log{border-radius:10px;padding:14px 16px;font-size:.74rem;line-height:1.7;word-break:break-all;display:none;margin-top:12px;white-space:pre-wrap;}
+.log.show{display:block;}
+.log.ok{background:rgba(62,245,160,.07);border:1px solid rgba(62,245,160,.2);color:var(--green);}
+.log.err{background:rgba(247,74,106,.07);border:1px solid rgba(247,74,106,.2);color:var(--red);}
+.log.info{background:rgba(124,106,247,.07);border:1px solid rgba(124,106,247,.2);color:#a89dff;}
 
-  .btn-outline {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-  }
-  .btn-outline:hover { background: rgba(124,106,247,.12); }
+/* INFO CARD */
+.info-card{background:rgba(124,106,247,.05);border:1px solid rgba(124,106,247,.15);border-radius:12px;padding:18px 20px;margin-top:14px;display:none;}
+.info-card.show{display:block;}
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:16px;}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:.64rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;padding-top:2px;}
+.info-val{font-size:.74rem;color:var(--text);text-align:right;word-break:break-all;}
 
-  .btn-danger {
-    background: var(--red);
-    color: #fff;
-  }
-  .btn-danger:hover { background: #ff6484; }
+/* EXPLORE */
+.capsule-grid{display:grid;gap:12px;margin-top:20px;}
+.capsule-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:20px 24px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+.capsule-card:hover{border-color:rgba(124,106,247,.3);background:rgba(124,106,247,.04);}
+.capsule-id{font-family:var(--fh);font-size:1.4rem;font-weight:800;color:rgba(255,255,255,.15);min-width:40px;}
+.capsule-meta{flex:1;}
+.capsule-owner{font-size:.72rem;color:var(--muted);margin-bottom:4px;}
+.capsule-hash{font-size:.68rem;color:var(--a2);word-break:break-all;}
+.capsule-status{font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:6px;white-space:nowrap;}
+.status-locked{background:rgba(247,74,106,.12);color:var(--red);}
+.status-unlocked{background:rgba(62,245,160,.12);color:var(--green);}
+.status-revealed{background:rgba(124,106,247,.12);color:var(--accent);}
 
-  .btn-success {
-    background: var(--green);
-    color: #0a0a0f;
-  }
-  .btn-success:hover { background: #6fffc0; }
+/* CONNECT WALL */
+.connect-wall{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:48px 32px;text-align:center;}
+.cw-icon{font-size:2.5rem;margin-bottom:16px;}
+.cw-title{font-family:var(--fh);font-size:1.3rem;font-weight:700;margin-bottom:8px;}
+.cw-desc{font-size:.76rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
 
-  /* ── Cards ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 20px;
-    transition: border-color .2s;
-  }
-  .card:hover { border-color: rgba(124,106,247,.3); }
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.62rem;letter-spacing:2px;text-transform:uppercase;margin:24px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-  .card-title {
-    font-family: var(--font-h);
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .badge {
-    font-family: var(--font-m);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-  .badge-lock  { background: rgba(124,106,247,.2); color: var(--accent);  }
-  .badge-reveal{ background: rgba(74,247,160,.2);  color: var(--green);   }
-  .badge-xfer  { background: rgba(247,162,106,.2); color: var(--accent2); }
+/* SPINNER */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.15);border-top-color:currentColor;border-radius:50%;animation:spin .5s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 
-  .card-desc {
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-bottom: 20px;
-    line-height: 1.6;
-  }
-
-  /* ── Form fields ── */
-  .field { margin-bottom: 16px; }
-  label {
-    display: block;
-    font-size: 0.68rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  input, textarea {
-    width: 100%;
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: var(--font-m);
-    font-size: 0.82rem;
-    padding: 11px 14px;
-    transition: border-color .15s;
-    outline: none;
-  }
-  input:focus, textarea:focus { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 72px; }
-  input[type="number"] { -moz-appearance: textfield; }
-  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-  .hash-preview {
-    margin-top: 8px;
-    font-size: 0.68rem;
-    color: var(--muted);
-    word-break: break-all;
-    line-height: 1.5;
-  }
-  .hash-preview span { color: var(--accent2); }
-
-  /* ── Log / feedback ── */
-  .log {
-    margin-top: 16px;
-    padding: 12px 14px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    line-height: 1.6;
-    display: none;
-    word-break: break-all;
-  }
-  .log.show { display: block; }
-  .log.ok   { background: rgba(74,247,160,.08);  border: 1px solid rgba(74,247,160,.25);  color: var(--green); }
-  .log.err  { background: rgba(247,74,106,.08);  border: 1px solid rgba(247,74,106,.25);  color: var(--red); }
-  .log.info { background: rgba(124,106,247,.08); border: 1px solid rgba(124,106,247,.25); color: var(--accent); }
-
-  /* ── Divider ── */
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 28px 0;
-    color: var(--muted);
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Capsule info box ── */
-  #capsule-info {
-    display: none;
-    background: rgba(124,106,247,.06);
-    border: 1px solid rgba(124,106,247,.2);
-    border-radius: 10px;
-    padding: 16px;
-    margin-top: 16px;
-    font-size: 0.75rem;
-    line-height: 2;
-  }
-  #capsule-info.show { display: block; }
-  #capsule-info dt { color: var(--muted); display: inline; }
-  #capsule-info dd { color: var(--text); display: inline; font-weight: 700; word-break: break-all; }
-  #capsule-info dd::after { content: '\A'; white-space: pre; }
-
-  /* ── Spinning loader ── */
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid rgba(255,255,255,.2);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Contract address banner ── */
-  #contract-banner {
-    background: rgba(247,162,106,.06);
-    border: 1px solid rgba(247,162,106,.25);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 0.72rem;
-    color: var(--accent2);
-    margin-bottom: 24px;
-    word-break: break-all;
-  }
-  #contract-banner strong { display: block; margin-bottom: 2px; color: var(--muted); font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase; }
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .nav-links{display:none;}
+  .hero-title{letter-spacing:-2px;}
+  .how-strip{flex-direction:column;}
+  .how-item+.how-item{border-left:none;border-top:1px solid var(--border);}
+  .stats-row{gap:20px;}
+}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
 
-  <!-- ── Header ── -->
-  <header>
-    <div class="logo">⧗ TimeCapsule</div>
-    <div class="tagline">Cryptographic time-locked secrets on Ethereum</div>
-  </header>
-
-  <!-- ── Wallet ── -->
-  <div id="wallet-bar">
-    <div id="wallet-status">Not connected</div>
-    <button class="btn-outline" id="btn-connect">Connect MetaMask</button>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">⧗ TimeCapsule</div>
+  <ul class="nav-links">
+    <li><a onclick="showPage('home')"     id="nav-home"     class="active">Home</a></li>
+    <li><a onclick="showPage('lock')"     id="nav-lock">Lock</a></li>
+    <li><a onclick="showPage('reveal')"   id="nav-reveal">Reveal</a></li>
+    <li><a onclick="showPage('transfer')" id="nav-transfer">Transfer</a></li>
+    <li><a onclick="showPage('explore')"  id="nav-explore">Explore</a></li>
+  </ul>
+  <div class="nav-right">
+    <div id="wallet-dot"></div>
+    <span id="wallet-short">Not connected</span>
+    <button class="btn-secondary" id="btn-nav-connect" onclick="connectWallet()" style="padding:7px 14px;font-size:.68rem;">Connect</button>
   </div>
+</nav>
 
-  <!-- ── Contract address ── -->
-  <div id="contract-banner">
-    <strong>Contract address (Sepolia)</strong>
-    <span id="contract-addr-display">Paste your deployed address in CONTRACT_ADDRESS below</span>
+<!-- PAGE: HOME -->
+<div class="page active" id="page-home">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px;min-height:calc(100vh - 64px);">
+    <div class="hero-eyebrow">⬡ Sepolia Testnet · Solidity 0.8.20</div>
+    <h1 class="hero-title"><span class="grad">Time</span><br><span class="grad">Capsule</span></h1>
+    <p class="hero-sub">Lock secrets on Ethereum with a cryptographic time-lock.<br>Prove prior knowledge. Reveal only when you're ready.</p>
+    <div class="hero-actions">
+      <button class="btn-connect-large" onclick="showPage('lock')">Lock a Secret →</button>
+      <button class="btn-outline-accent" onclick="showPage('explore')">Explore Capsules</button>
+    </div>
+    <div class="how-strip">
+      <div class="how-item" data-n="01">
+        <div class="how-icon">🔐</div>
+        <div class="how-label">Hash & Lock</div>
+        <div class="how-desc">Content is hashed with keccak256. Only the hash goes on-chain — nobody can read it.</div>
+      </div>
+      <div class="how-item" data-n="02">
+        <div class="how-icon">⏳</div>
+        <div class="how-label">Time Gate</div>
+        <div class="how-desc">block.timestamp enforces the lock. Not even the owner can reveal before unlock time.</div>
+      </div>
+      <div class="how-item" data-n="03">
+        <div class="how-icon">✅</div>
+        <div class="how-label">Verified Reveal</div>
+        <div class="how-desc">Submit plaintext. Contract verifies keccak256 matches. Content stored forever on-chain.</div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val">3</div><div class="stat-label">Functions</div></div>
+      <div class="stat"><div class="stat-val">18</div><div class="stat-label">Tests Passing</div></div>
+      <div class="stat"><div class="stat-val">∞</div><div class="stat-label">Time On-Chain</div></div>
+      <div class="stat"><div class="stat-val">0</div><div class="stat-label">Trusted Parties</div></div>
+    </div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       SECTION 1 — LOCK
-  ═══════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-title">
-      Lock a Capsule
-      <span class="badge badge-lock">lock()</span>
+<!-- PAGE: LOCK -->
+<div class="page" id="page-lock">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-tag tag-lock">lock()</div>
+      <h2 class="page-title">Lock a Capsule</h2>
+      <p class="page-desc">Your content never leaves this page in plaintext. Only its keccak256 hash is sent to the blockchain.</p>
     </div>
-    <div class="card-desc">
-      Type your secret content. The page hashes it with keccak256 — only the hash goes on-chain.<br>
-      Nobody can read your content until you reveal it after the unlock date.
+    <div id="lock-wall" class="connect-wall">
+      <div class="cw-icon">🔒</div>
+      <div class="cw-title">Connect your wallet</div>
+      <div class="cw-desc">You need MetaMask on Sepolia to lock a capsule.</div>
+      <button class="btn-connect-large" onclick="connectWallet()">Connect MetaMask</button>
     </div>
-
-    <div class="field">
-      <label>Secret Content</label>
-      <textarea id="lock-content" placeholder="The mayor took the bribe on 2025-01-15..." rows="3"></textarea>
-      <div class="hash-preview" id="hash-preview">Hash preview: <span>—</span></div>
+    <div id="lock-form" style="display:none;">
+      <div class="fcard">
+        <div class="field">
+          <label>Secret Content</label>
+          <textarea id="lock-content" placeholder="Write anything — evidence, a prediction, a memory..." rows="4"></textarea>
+          <div class="hash-box" id="lock-hash-box"></div>
+          <div class="hint">Hashed locally — only the hash above goes on-chain.</div>
+        </div>
+        <div class="field">
+          <label>Unlock after (days)</label>
+          <input type="number" id="lock-days" value="1" min="1"/>
+          <div class="hint">Minimum 1 day. After this, reveal() becomes callable.</div>
+        </div>
+        <button class="btn-primary" id="btn-lock">🔐 Lock Capsule</button>
+        <div class="log" id="log-lock"></div>
+      </div>
     </div>
-    <div class="field">
-      <label>Unlock in how many days?</label>
-      <input type="number" id="lock-days" value="1" min="1" placeholder="e.g. 1"/>
-      <div class="hash-preview">Tip: use 1 for demo (or set to a tiny value in test)</div>
-    </div>
-
-    <button class="btn-primary" id="btn-lock">Lock Capsule</button>
-    <div class="log" id="log-lock"></div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       SECTION 2 — REVEAL
-  ═══════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-title">
-      Reveal a Capsule
-      <span class="badge badge-reveal">reveal()</span>
+<!-- PAGE: REVEAL -->
+<div class="page" id="page-reveal">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-tag tag-reveal">reveal()</div>
+      <h2 class="page-title">Reveal a Capsule</h2>
+      <p class="page-desc">After unlock time, submit original content. The contract verifies keccak256 matches the stored hash.</p>
     </div>
-    <div class="card-desc">
-      After the unlock time, submit the original plaintext.
-      The contract verifies keccak256(content) matches what was stored.
+    <div id="reveal-wall" class="connect-wall">
+      <div class="cw-icon">🔓</div>
+      <div class="cw-title">Connect your wallet</div>
+      <div class="cw-desc">Connect MetaMask to reveal capsules you own.</div>
+      <button class="btn-connect-large" onclick="connectWallet()">Connect MetaMask</button>
     </div>
-
-    <div class="field">
-      <label>Capsule ID</label>
-      <input type="number" id="reveal-id" value="0" min="0"/>
+    <div id="reveal-form" style="display:none;">
+      <div class="fcard">
+        <div class="field">
+          <label>Capsule ID</label>
+          <input type="number" id="reveal-id" value="0" min="0"/>
+        </div>
+        <button class="btn-secondary" id="btn-check" style="width:100%;justify-content:center;" onclick="checkCapsule()">Check Capsule Info</button>
+        <div class="info-card" id="capsule-info"></div>
+      </div>
+      <div class="divider">Then Reveal</div>
+      <div class="fcard">
+        <div class="field">
+          <label>Original Content (plaintext)</label>
+          <textarea id="reveal-content" placeholder="The exact content you locked..." rows="4"></textarea>
+          <div class="hint">Must match exactly — one character difference = hash mismatch = revert.</div>
+        </div>
+        <button class="btn-green" id="btn-reveal">✅ Reveal on Chain</button>
+        <div class="log" id="log-reveal"></div>
+      </div>
     </div>
-    <div class="field">
-      <label>Original Content (plaintext)</label>
-      <textarea id="reveal-content" placeholder="Exact content you locked..." rows="3"></textarea>
-    </div>
-
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn-outline"  id="btn-check">Check Capsule</button>
-      <button class="btn-success"  id="btn-reveal">Reveal</button>
-    </div>
-    <div id="capsule-info" class="show" style="display:none">
-      <dl id="capsule-dl"></dl>
-    </div>
-    <div class="log" id="log-reveal"></div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       SECTION 3 — EARLY TRANSFER
-  ═══════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-title">
-      Transfer Ownership
-      <span class="badge badge-xfer">earlyTransfer()</span>
+<!-- PAGE: TRANSFER -->
+<div class="page" id="page-transfer">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-tag tag-xfer">earlyTransfer()</div>
+      <h2 class="page-title">Transfer Ownership</h2>
+      <p class="page-desc">Hand off a capsule to a trusted keeper before it unlocks. New owner becomes the only one who can reveal.</p>
     </div>
-    <div class="card-desc">
-      Transfer a capsule to a new keeper before it unlocks.
-      The new owner will be the only one who can reveal it.
+    <div id="xfer-wall" class="connect-wall">
+      <div class="cw-icon">↗️</div>
+      <div class="cw-title">Connect your wallet</div>
+      <div class="cw-desc">Connect MetaMask to transfer capsule ownership.</div>
+      <button class="btn-connect-large" onclick="connectWallet()">Connect MetaMask</button>
     </div>
-
-    <div class="field">
-      <label>Capsule ID</label>
-      <input type="number" id="xfer-id" value="0" min="0"/>
+    <div id="xfer-form" style="display:none;">
+      <div class="fcard">
+        <div class="field">
+          <label>Capsule ID</label>
+          <input type="number" id="xfer-id" value="0" min="0"/>
+        </div>
+        <div class="field">
+          <label>New Owner Address</label>
+          <input type="text" id="xfer-address" placeholder="0x..."/>
+          <div class="hint">This address will be the only one who can reveal this capsule.</div>
+        </div>
+        <button class="btn-orange" id="btn-xfer">↗ Transfer Capsule</button>
+        <div class="log" id="log-xfer"></div>
+      </div>
+      <div class="fcard" style="background:rgba(247,162,106,.04);border-color:rgba(247,162,106,.15);">
+        <div style="font-size:.7rem;color:var(--a2);font-weight:500;margin-bottom:6px;">⚠ Warning</div>
+        <div style="font-size:.72rem;color:var(--muted);line-height:1.7;">This action is <strong style="color:var(--text)">irreversible</strong>. Once transferred, you permanently lose the ability to reveal this capsule.</div>
+      </div>
     </div>
-    <div class="field">
-      <label>New Owner Address</label>
-      <input type="text" id="xfer-address" placeholder="0x..."/>
-    </div>
-
-    <button class="btn-danger" id="btn-xfer">Transfer</button>
-    <div class="log" id="log-xfer"></div>
   </div>
+</div>
 
+<!-- PAGE: EXPLORE -->
+<div class="page" id="page-explore">
+  <div class="inner" style="max-width:660px;">
+    <div class="page-header">
+      <div class="page-tag tag-explore">Public</div>
+      <h2 class="page-title">Explore Capsules</h2>
+      <p class="page-desc">Browse all on-chain capsules. Locked ones show only their hash. Revealed ones show their content.</p>
+    </div>
+    <div class="fcard">
+      <div class="field" style="margin-bottom:0;">
+        <label>Number of capsules to load</label>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="number" id="explore-count" value="5" min="1" max="20" style="max-width:100px;"/>
+          <button class="btn-secondary" id="btn-explore" onclick="exploreCapsules()" style="flex:1;justify-content:center;">Load Capsules</button>
+        </div>
+      </div>
+    </div>
+    <div class="capsule-grid" id="capsule-grid"></div>
+    <div class="log" id="log-explore"></div>
+  </div>
 </div>
 
 <script>
-// ──────────────────────────────────────────────────
-//  CONFIGURATION — paste your deployed address here
-// ──────────────────────────────────────────────────
 const CONTRACT_ADDRESS = "PASTE_YOUR_DEPLOYED_ADDRESS_HERE";
-
 const ABI = [
   "function lock(bytes32 contentHash, uint256 unlockDays) external returns (uint256)",
   "function reveal(uint256 capsuleId, string calldata content) external",
@@ -420,183 +363,166 @@ const ABI = [
   "event CapsuleTransferred(uint256 indexed,address indexed,address indexed)"
 ];
 
-// ──────────────────────────────────────────────────
-//  State
-// ──────────────────────────────────────────────────
-let provider, signer, contract;
+let provider, signer, contract, walletAddr = null;
 
-// ──────────────────────────────────────────────────
-//  Init
-// ──────────────────────────────────────────────────
-document.getElementById("contract-addr-display").textContent =
-  CONTRACT_ADDRESS !== "PASTE_YOUR_DEPLOYED_ADDRESS_HERE"
-    ? CONTRACT_ADDRESS
-    : "⚠ Paste your deployed address in index.html → CONTRACT_ADDRESS";
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+  updateWalls();
+}
 
-// Live hash preview as user types
-document.getElementById("lock-content").addEventListener("input", function () {
-  const val = this.value.trim();
-  const el  = document.getElementById("hash-preview").querySelector("span");
-  if (!val) { el.textContent = "—"; return; }
-  el.textContent = ethers.keccak256(ethers.toUtf8Bytes(val));
-});
-
-// Connect MetaMask
-document.getElementById("btn-connect").addEventListener("click", connectWallet);
+function updateWalls() {
+  const c = !!walletAddr;
+  ['lock','reveal','transfer'].forEach(p => {
+    const w = document.getElementById(p+'-wall');
+    const f = document.getElementById(p+'-form');
+    if(w && f){ w.style.display = c?'none':'block'; f.style.display = c?'block':'none'; }
+  });
+}
 
 async function connectWallet() {
-  if (!window.ethereum) {
-    alert("MetaMask not found. Please install MetaMask.");
-    return;
-  }
-  provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer   = await provider.getSigner();
-  contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-  const addr = await signer.getAddress();
-  const network = await provider.getNetwork();
-
-  document.getElementById("wallet-status").innerHTML =
-    `Connected: <span>${addr.slice(0,6)}...${addr.slice(-4)}</span>
-     &nbsp;|&nbsp; Network: <span>${network.name} (${network.chainId})</span>`;
-  document.getElementById("btn-connect").textContent = "Connected ✓";
-  document.getElementById("btn-connect").disabled    = true;
+  if (!window.ethereum) { alert("MetaMask not found."); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer   = await provider.getSigner();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    walletAddr = await signer.getAddress();
+    const s = walletAddr.slice(0,6)+'...'+walletAddr.slice(-4);
+    document.getElementById('wallet-short').textContent = s;
+    document.getElementById('wallet-dot').classList.add('connected');
+    document.getElementById('btn-nav-connect').textContent = 'Connected ✓';
+    document.getElementById('btn-nav-connect').disabled = true;
+    updateWalls();
+  } catch(e) { alert("Failed: " + e.message); }
 }
 
-// ──────────────────────────────────────────────────
-//  lock()
-// ──────────────────────────────────────────────────
-document.getElementById("btn-lock").addEventListener("click", async () => {
-  const log   = document.getElementById("log-lock");
-  const btn   = document.getElementById("btn-lock");
-  const content  = document.getElementById("lock-content").value.trim();
-  const days     = parseInt(document.getElementById("lock-days").value);
+document.getElementById('lock-content').addEventListener('input', function() {
+  const box = document.getElementById('lock-hash-box');
+  if (!this.value.trim()) { box.classList.remove('show'); return; }
+  box.textContent = '⬡ ' + ethers.keccak256(ethers.toUtf8Bytes(this.value.trim()));
+  box.classList.add('show');
+});
 
-  if (!contract) return showLog(log, "err", "Connect wallet first.");
-  if (!content)  return showLog(log, "err", "Enter secret content.");
-  if (!days || days < 1) return showLog(log, "err", "Unlock days must be ≥ 1.");
-
+document.getElementById('btn-lock').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-lock');
+  const log = document.getElementById('log-lock');
+  const content = document.getElementById('lock-content').value.trim();
+  const days = parseInt(document.getElementById('lock-days').value);
+  if (!content) return showLog(log,'err','Enter your secret content.');
+  if (!days || days < 1) return showLog(log,'err','Unlock days must be ≥ 1.');
   const hash = ethers.keccak256(ethers.toUtf8Bytes(content));
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Sending...';
-  showLog(log, "info", `Hashing content...\nHash: ${hash}\n\nSending transaction...`);
-
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sending...';
+  showLog(log,'info','Sending to Sepolia...');
   try {
     const tx = await contract.lock(hash, days);
-    showLog(log, "info", `Tx sent: ${tx.hash}\nWaiting for confirmation...`);
+    showLog(log,'info','Tx: '+tx.hash+'\nWaiting for confirmation...');
     const rc = await tx.wait();
-    // Extract capsule ID from event
-    const event = rc.logs.find(l => {
-      try { return contract.interface.parseLog(l)?.name === "CapsuleLocked"; } catch { return false; }
-    });
-    const parsed = event ? contract.interface.parseLog(event) : null;
-    const id     = parsed ? parsed.args[0].toString() : "?";
-    showLog(log, "ok",
-      `✓ Capsule locked!\nCapsule ID: ${id}\nTx: ${tx.hash}`);
-  } catch (e) {
-    showLog(log, "err", `Error: ${e.reason || e.message}`);
-  } finally {
-    btn.disabled  = false;
-    btn.innerHTML = "Lock Capsule";
-  }
+    const ev = rc.logs.map(l=>{try{return contract.interface.parseLog(l);}catch{return null;}}).find(l=>l?.name==='CapsuleLocked');
+    const id = ev ? ev.args[0].toString() : '?';
+    showLog(log,'ok','✓ Capsule #'+id+' locked!\n\nHash: '+hash+'\nTx: '+tx.hash+'\n\n⚠ Save your Capsule ID: '+id);
+  } catch(e) { showLog(log,'err','Error: '+(e.reason||e.message)); }
+  finally { btn.disabled=false; btn.innerHTML='🔐 Lock Capsule'; }
 });
 
-// ──────────────────────────────────────────────────
-//  Check capsule info
-// ──────────────────────────────────────────────────
-document.getElementById("btn-check").addEventListener("click", async () => {
-  const log = document.getElementById("log-reveal");
-  const id  = parseInt(document.getElementById("reveal-id").value);
-  if (!contract) return showLog(log, "err", "Connect wallet first.");
-
+async function checkCapsule() {
+  const btn = document.getElementById('btn-check');
+  const id  = parseInt(document.getElementById('reveal-id').value);
+  const info = document.getElementById('capsule-info');
+  if (!contract) return;
+  btn.innerHTML = '<span class="spin"></span> Loading...';
   try {
-    const [owner, hash, unlockTime, revealed_content, revealed] = await contract.getCapsule(id);
-    const remaining = await contract.timeRemaining(id);
-    const unlockDate = new Date(Number(unlockTime) * 1000).toLocaleString();
-    const rem = Number(remaining);
-    const remStr = rem === 0 ? "✅ Unlocked" :
-      `${Math.floor(rem/86400)}d ${Math.floor((rem%86400)/3600)}h ${Math.floor((rem%3600)/60)}m remaining`;
-
-    const dl = document.getElementById("capsule-dl");
-    dl.innerHTML = `
-      <dt>Owner: </dt><dd>${owner}</dd>
-      <dt>Hash: </dt><dd>${hash}</dd>
-      <dt>Unlock: </dt><dd>${unlockDate} (${remStr})</dd>
-      <dt>Revealed: </dt><dd>${revealed ? "Yes — " + revealed_content : "No"}</dd>
+    const [owner,hash,unlockTime,content,revealed] = await contract.getCapsule(id);
+    const rem = Number(await contract.timeRemaining(id));
+    const date = new Date(Number(unlockTime)*1000).toLocaleString();
+    const remStr = rem===0
+      ? '<span style="color:var(--green)">✅ Unlocked</span>'
+      : '<span style="color:var(--a2)">⏳ '+Math.floor(rem/86400)+'d '+Math.floor((rem%86400)/3600)+'h '+Math.floor((rem%3600)/60)+'m</span>';
+    info.innerHTML = `
+      <div class="info-row"><span class="info-key">Owner</span><span class="info-val">${owner.slice(0,10)}...${owner.slice(-6)}</span></div>
+      <div class="info-row"><span class="info-key">Hash</span><span class="info-val" style="color:var(--a2)">${hash.slice(0,20)}...${hash.slice(-6)}</span></div>
+      <div class="info-row"><span class="info-key">Unlock</span><span class="info-val">${date}</span></div>
+      <div class="info-row"><span class="info-key">Status</span><span class="info-val">${remStr}</span></div>
+      ${revealed?'<div class="info-row"><span class="info-key">Content</span><span class="info-val" style="color:var(--green)">'+content+'</span></div>':''}
     `;
-    document.getElementById("capsule-info").style.display = "block";
-    showLog(log, "info", `Capsule #${id} loaded.`);
-  } catch (e) {
-    showLog(log, "err", `Error: ${e.reason || e.message}`);
-    document.getElementById("capsule-info").style.display = "none";
-  }
-});
+    info.classList.add('show');
+  } catch(e) {
+    info.innerHTML='<div style="color:var(--red);font-size:.74rem">Capsule #'+id+' not found.</div>';
+    info.classList.add('show');
+  } finally { btn.innerHTML='Check Capsule Info'; }
+}
 
-// ──────────────────────────────────────────────────
-//  reveal()
-// ──────────────────────────────────────────────────
-document.getElementById("btn-reveal").addEventListener("click", async () => {
-  const log     = document.getElementById("log-reveal");
-  const btn     = document.getElementById("btn-reveal");
-  const id      = parseInt(document.getElementById("reveal-id").value);
-  const content = document.getElementById("reveal-content").value.trim();
-
-  if (!contract) return showLog(log, "err", "Connect wallet first.");
-  if (!content)  return showLog(log, "err", "Enter the original content.");
-
-  btn.disabled  = true;
-  btn.innerHTML = '<span class="spinner"></span>Sending...';
-
+document.getElementById('btn-reveal').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-reveal');
+  const log = document.getElementById('log-reveal');
+  const id  = parseInt(document.getElementById('reveal-id').value);
+  const content = document.getElementById('reveal-content').value.trim();
+  if (!content) return showLog(log,'err','Enter the original content.');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sending...';
+  showLog(log,'info','Sending reveal transaction...');
   try {
     const tx = await contract.reveal(id, content);
-    showLog(log, "info", `Tx sent: ${tx.hash}\nWaiting...`);
+    showLog(log,'info','Tx: '+tx.hash+'\nWaiting...');
     await tx.wait();
-    showLog(log, "ok", `✓ Revealed! Content is now public on-chain.\nTx: ${tx.hash}`);
-  } catch (e) {
-    showLog(log, "err", `Error: ${e.reason || e.message}`);
-  } finally {
-    btn.disabled  = false;
-    btn.innerHTML = "Reveal";
-  }
+    showLog(log,'ok','✓ Revealed! Content is permanently public on-chain.\nTx: '+tx.hash);
+  } catch(e) { showLog(log,'err','Error: '+(e.reason||e.message)); }
+  finally { btn.disabled=false; btn.innerHTML='✅ Reveal on Chain'; }
 });
 
-// ──────────────────────────────────────────────────
-//  earlyTransfer()
-// ──────────────────────────────────────────────────
-document.getElementById("btn-xfer").addEventListener("click", async () => {
-  const log     = document.getElementById("log-xfer");
-  const btn     = document.getElementById("btn-xfer");
-  const id      = parseInt(document.getElementById("xfer-id").value);
-  const newOwner = document.getElementById("xfer-address").value.trim();
-
-  if (!contract) return showLog(log, "err", "Connect wallet first.");
-  if (!ethers.isAddress(newOwner)) return showLog(log, "err", "Invalid address.");
-
-  btn.disabled  = true;
-  btn.innerHTML = '<span class="spinner"></span>Sending...';
-
+document.getElementById('btn-xfer').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-xfer');
+  const log = document.getElementById('log-xfer');
+  const id  = parseInt(document.getElementById('xfer-id').value);
+  const addr = document.getElementById('xfer-address').value.trim();
+  if (!ethers.isAddress(addr)) return showLog(log,'err','Invalid address.');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sending...';
+  showLog(log,'info','Sending transfer...');
   try {
-    const tx = await contract.earlyTransfer(id, newOwner);
-    showLog(log, "info", `Tx sent: ${tx.hash}\nWaiting...`);
+    const tx = await contract.earlyTransfer(id, addr);
+    showLog(log,'info','Tx: '+tx.hash+'\nWaiting...');
     await tx.wait();
-    showLog(log, "ok", `✓ Transferred capsule #${id} to ${newOwner}\nTx: ${tx.hash}`);
-  } catch (e) {
-    showLog(log, "err", `Error: ${e.reason || e.message}`);
-  } finally {
-    btn.disabled  = false;
-    btn.innerHTML = "Transfer";
-  }
+    showLog(log,'ok','✓ Capsule #'+id+' transferred to '+addr+'\nTx: '+tx.hash);
+  } catch(e) { showLog(log,'err','Error: '+(e.reason||e.message)); }
+  finally { btn.disabled=false; btn.innerHTML='↗ Transfer Capsule'; }
 });
 
-// ──────────────────────────────────────────────────
-//  Helper
-// ──────────────────────────────────────────────────
-function showLog(el, type, msg) {
-  el.className = `log show ${type}`;
-  el.textContent = msg;
+async function exploreCapsules() {
+  const log   = document.getElementById('log-explore');
+  const grid  = document.getElementById('capsule-grid');
+  const count = parseInt(document.getElementById('explore-count').value)||5;
+  const btn   = document.getElementById('btn-explore');
+  btn.innerHTML='<span class="spin"></span> Loading...';
+  grid.innerHTML='';
+  const c = contract;
+  if (!c) { showLog(log,'err','Connect wallet first.'); btn.innerHTML='Load Capsules'; return; }
+  try {
+    const total = Number(await c.capsuleCounter());
+    if (total===0){ showLog(log,'info','No capsules yet. Be the first!'); btn.innerHTML='Load Capsules'; return; }
+    const n = Math.min(count, total);
+    for(let i=0;i<n;i++){
+      try {
+        const [owner,hash,unlockTime,content,revealed] = await c.getCapsule(i);
+        const rem = Number(await c.timeRemaining(i));
+        const unlocked = rem===0;
+        let sc,st;
+        if(revealed){sc='status-revealed';st='Revealed';}
+        else if(unlocked){sc='status-unlocked';st='Unlocked';}
+        else{sc='status-locked';st='Locked';}
+        const card = document.createElement('div');
+        card.className='capsule-card';
+        card.innerHTML=`<div class="capsule-id">#${i}</div><div class="capsule-meta"><div class="capsule-owner">${owner.slice(0,10)}...${owner.slice(-6)}</div><div class="capsule-hash">${revealed?content.slice(0,60)+(content.length>60?'...':''):hash.slice(0,34)+'...'}</div></div><div class="capsule-status ${sc}">${st}</div>`;
+        grid.appendChild(card);
+      } catch(_){}
+    }
+    showLog(log,'ok','Loaded '+n+' of '+total+' capsules.');
+  } catch(e){ showLog(log,'err','Error: '+(e.reason||e.message)); }
+  finally { btn.innerHTML='Load Capsules'; }
 }
+
+function showLog(el,type,msg){ el.className='log show '+type; el.textContent=msg; }
 </script>
 </body>
 </html>
